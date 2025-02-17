@@ -1,0 +1,116 @@
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4">
+        <!-- Card Container -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <h1 class="text-2xl font-bold text-white">
+                    {{ isEditing ? 'Editar' : 'Nuevo' }} Gasto
+                </h1>
+                <p class="text-blue-100 mt-1">
+                    {{ isEditing ? 'Actualiza los detalles del gasto existente' : 'Registra un nuevo gasto' }}
+                </p>
+            </div>
+
+            <!-- Loading State -->
+            @if (loading) {
+            <div class="flex justify-center items-center h-64">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            </div>
+            }
+
+            <!-- Form -->
+            @if (!loading) {
+            <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
+                <!-- Amount -->
+                <div class="space-y-2">
+                    <label for="amount" class="block text-sm font-medium text-gray-700">
+                        Monto <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" id="amount" formControlName="amount" step="0.01"
+                            class="block w-full pl-7 pr-12 py-3 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('amount')}"
+                            placeholder="0.00">
+                    </div>
+                    @if (getErrorMessage('amount')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('amount') }}</p>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div class="space-y-2">
+                    <label for="description" class="block text-sm font-medium text-gray-700">
+                        Descripción <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="description" formControlName="description" rows="3"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('description')}"
+                        placeholder="Describe el gasto..."></textarea>
+                    @if (getErrorMessage('description')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('description') }}</p>
+                    }
+                </div>
+
+                <!-- Category -->
+                <div class="space-y-2">
+                    <label for="category" class="block text-sm font-medium text-gray-700">
+                        Categoría <span class="text-red-500">*</span>
+                    </label>
+                    <select id="category" formControlName="category"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                        <option value="">Selecciona una categoría</option>
+                        @for (category of categories; track category.value) {
+                        <option [value]="category.value"
+                            [selected]="category.value === expenseForm.get('category')?.value">{{ category.label }}
+                        </option>
+                        }
+                    </select>
+                    @if (getErrorMessage('category')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('category') }}</p>
+                    }
+                </div>
+
+                <!-- Date -->
+                <div class="space-y-2">
+                    <label for="date" class="block text-sm font-medium text-gray-700">
+                        Fecha <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="date" formControlName="date"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('date')}">
+                    @if (getErrorMessage('date')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('date') }}</p>
+                    }
+                </div>
+
+                <!-- Image Upload -->
+                <div class="space-y-2">
+                    <label for="image" class="block text-sm font-medium text-gray-700">
+                        Cargar Imagen
+                    </label>
+                    <input type="file" id="image" (change)="onImageSelected($event)"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        accept="image/*" />
+                    <p class="text-sm text-gray-500">Opcional: Carga una imagen relacionada con el gasto.</p>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end space-x-3 pt-6">
+                    <button type="button" routerLink="/expenses"
+                        class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" [disabled]="loading"
+                        class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        {{ isEditing ? 'Actualizar' : 'Crear' }} Gasto
+                    </button>
+                </div>
+            </form>
+            }
+        </div>
+    </div>
+</div>

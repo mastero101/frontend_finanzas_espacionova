@@ -1,0 +1,114 @@
+<div class="container mx-auto px-4 py-8">
+    <!-- Header con barra de búsqueda -->
+    <div class="mb-8 space-y-4">
+        <div class="flex flex-col md:flex-row gap-4">
+            <!-- Campo de búsqueda -->
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar por descripción o categoría..."
+                class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+            <!-- Filtro por categoría -->
+            <select [(ngModel)]="selectedCategory" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="all">Todas las categorías</option>
+                <option *ngFor="let category of categories" [value]="category">
+                    {{ category }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Filtros de monto -->
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex items-center gap-2">
+                <label class="text-gray-600">Monto mínimo:</label>
+                <input type="number" [(ngModel)]="minAmount" class="w-24 p-2 border rounded-lg">
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-gray-600">Monto máximo:</label>
+                <input type="number" [(ngModel)]="maxAmount" class="w-24 p-2 border rounded-lg">
+            </div>
+        </div>
+
+        <!-- Filtros de fecha -->
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex items-center gap-2">
+                <label class="text-gray-600">Desde:</label>
+                <input type="date" [(ngModel)]="startDate"
+                    class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-gray-600">Hasta:</label>
+                <input type="date" [(ngModel)]="endDate" class="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de gastos -->
+    <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let expense of filteredExpenses"
+            class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">{{ expense.description }}</h3>
+                    <p class="text-sm text-gray-500">{{ expense.category }}</p>
+                    <p class="text-sm text-gray-500">{{ expense.date | date:'shortDate' }}</p>
+                </div>
+                <span class="text-lg font-bold text-green-600">${{ expense.amount }}</span>
+            </div>
+
+            <!-- Sección de recibos -->
+            <div class="mt-4 border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-500 mb-2">Recibos adjuntos</h4>
+                <div class="flex flex-wrap gap-2">
+                    <div *ngFor="let receipt of getReceiptsForExpense(expense.id!)" class="group relative">
+                        <div class="relative">
+                            <img [src]="receipt.thumbnailUrl || receipt.url" alt="Recibo"
+                                class="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
+                                (click)="openImageModal(receipt.url)">
+                            <a [href]="receipt.url" download
+                                class="absolute bottom-1 right-1 bg-white/80 rounded-full p-1 hover:bg-white transition-colors"
+                                title="Descargar">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <p *ngIf="getReceiptsForExpense(expense.id!).length === 0" class="text-sm text-gray-400">No hay recibos
+                    adjuntos</p>
+            </div>
+
+            <div class="flex justify-end space-x-2">
+                <button [routerLink]="['/expenses/edit', expense.id]" class="text-blue-500 hover:text-blue-600">
+                    Editar
+                </button>
+                <button (click)="deleteExpense(expense.id!)" class="text-red-500 hover:text-red-600">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensaje cuando no hay resultados -->
+    <div *ngIf="!loading && !error && filteredExpenses.length === 0" class="text-center py-8 text-gray-500">
+        No se encontraron gastos con los filtros aplicados
+    </div>
+
+    <!-- Modal para vista ampliada -->
+    <div *ngIf="selectedImage" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"
+        (click)="selectedImage = null">
+        <div class="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden relative">
+            <img [src]="selectedImage" alt="Recibo ampliado" class="w-full h-auto max-h-[80vh] object-contain">
+            <div class="absolute top-2 right-2">
+                <button (click)="selectedImage = null"
+                    class="text-white bg-black/50 hover:bg-black/75 rounded-full p-2 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
