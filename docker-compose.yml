@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  angular-app:
+    build: .
+    ports:
+      - "9300:4200"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        limits:
+          memory: 768M
