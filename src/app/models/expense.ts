@@ -1,10 +1,18 @@
 export interface Expense {
-    id: number;
-    amount: number;
-    description: string;
-    category: string;
-    date: Date;
-    userId?: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+  id?: number;
+  concept: string;
+  amount: number;
+  projectName: string;
+  paidBy: string;
+  fundedBy: string;
+  purchaseLocation: string;
+  paymentDate: Date;
+  receipts?: Receipt[];
+}
+
+export interface Receipt {
+  id: number;
+  imageUrl: string;
+  fileName: string;
+  expenseId: number;
 }

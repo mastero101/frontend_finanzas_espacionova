@@ -24,10 +24,10 @@ export class ExpenseListComponent implements OnInit {
   error: string | null = null;
   selectedImage: string | null = null;
   searchTerm: string = '';
-  selectedCategory: string = 'all';
+  selectedProject: string = 'all';
+  projects: string[] = [];
   minAmount: number | null = null;
   maxAmount: number | null = null;
-  categories: string[] = [];
   startDate: Date | null = null;
   endDate: Date | null = null;
 
@@ -35,18 +35,17 @@ export class ExpenseListComponent implements OnInit {
 
   get filteredExpenses(): Expense[] {
     return this.expenses.filter(expense => {
-      const matchesSearch = expense.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                          expense.category.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const matchesCategory = this.selectedCategory === 'all' || expense.category === this.selectedCategory;
+      const matchesSearch = expense.concept.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+                          expense.purchaseLocation.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const matchesProject = this.selectedProject === 'all' || expense.projectName === this.selectedProject;
       const matchesMin = this.minAmount ? expense.amount >= this.minAmount : true;
       const matchesMax = this.maxAmount ? expense.amount <= this.maxAmount : true;
       
-      // Filtros de fecha
-      const expenseDate = new Date(expense.date);
-      const matchesStartDate = this.startDate ? expenseDate >= new Date(this.startDate) : true;
-      const matchesEndDate = this.endDate ? expenseDate <= new Date(this.endDate) : true;
+      const paymentDate = new Date(expense.paymentDate);
+      const matchesStartDate = this.startDate ? paymentDate >= new Date(this.startDate) : true;
+      const matchesEndDate = this.endDate ? paymentDate <= new Date(this.endDate) : true;
 
-      return matchesSearch && matchesCategory && matchesMin && matchesMax && 
+      return matchesSearch && matchesProject && matchesMin && matchesMax && 
              matchesStartDate && matchesEndDate;
     });
   }
@@ -59,17 +58,18 @@ export class ExpenseListComponent implements OnInit {
     this.loading = true;
     this.expenseService.getExpenses().subscribe({
       next: (data) => {
-        this.expenses = data.map(expense => {
-          const localDate = new Date(expense.date);
-          localDate.setHours(localDate.getHours() + localDate.getTimezoneOffset() / 60); // Ajustar a la zona horaria local
-          return {
-            ...expense,
-            date: localDate
-          };
-        });
-        this.categories = [...new Set(data.map(e => e.category))];
+        this.expenses = data.map(expense => ({
+          ...expense,
+          paymentDate: new Date(expense.paymentDate),
+          receipts: expense.receipts?.map(receipt => ({
+            ...receipt,
+            imageUrl: receipt.imageUrl,
+            fileName: receipt.fileName
+          })) || []
+        }));
+        this.projects = [...new Set(data.map(e => e.projectName))];
+        this.loading = false;
         this.cdr.detectChanges();
-        this.cdr.markForCheck();
         this.loadAllReceipts();
       },
       error: (error) => {
@@ -85,22 +85,28 @@ export class ExpenseListComponent implements OnInit {
     this.expenseService.getReceipts().subscribe({
       next: (receipts: any[]) => {
         this.receiptsMap = receipts.reduce((acc: { [key: number]: any[] }, receipt: any) => {
-          const expenseId = receipt.ExpenseId;
+          const expenseId = receipt.expenseId || receipt.ExpenseId;
           if (!acc[expenseId]) acc[expenseId] = [];
-          acc[expenseId].push(receipt);
+          acc[expenseId].push({
+            ...receipt,
+            imageUrl: receipt.url,
+            fileName: receipt.fileName
+          });
           return acc;
         }, {});
-        this.loading = false;
       },
       error: (error: any) => {
         console.error('Error cargando recibos:', error);
-        this.loading = false;
       }
     });
   }
 
   getReceiptsForExpense(expenseId: number): any[] {
     return this.receiptsMap[expenseId] || [];
+  }
+
+  handleImageError(event: any): void {
+    console.error('Error cargando imagen:', event);
   }
 
   deleteExpense(id: number): void {
@@ -131,7 +137,7 @@ export class ExpenseListComponent implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = receipt.filename || `recibo-${receipt.id}.jpg`;
+        a.download = receipt.fileName || `recibo-${receipt.id}.jpg`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

@@ -20,8 +20,19 @@ export class ExpenseService {
 
   getExpenses(): Observable<Expense[]> {
     return from(
-      this.axios.get<Expense[]>('/expenses')
-        .then(response => response.data)
+      this.axios.get<any[]>('/expenses')  // Usar any para tipo temporal
+        .then(response => {
+          return response.data.map(expense => ({
+            ...expense,
+            paymentDate: new Date(expense.paymentDate),
+            receipts: (expense.receipts || []).map((r: any) => ({
+              id: r.id,
+              imageUrl: r.imageUrl || r.url,  // Mapear ambos nombres posibles
+              fileName: r.fileName || r.filename,
+              expenseId: r.expenseId || r.ExpenseId
+            }))
+          }));
+        })
     );
   }
 
@@ -33,29 +44,35 @@ export class ExpenseService {
   }
 
   createExpense(expense: Expense, image?: File): Observable<Expense> {
-    const expenseData = {
-      amount: expense.amount,
-      description: expense.description,
-      category: expense.category,
-      date: expense.date,
-      userId: 1 // Temporal hasta implementar autenticación
-    };
+    const formData = new FormData();
+    
+    // Agregar todos los campos al FormData
+    formData.append('userId', '1'); // Obtener del sistema de autenticación
+    formData.append('concept', expense.concept);
+    formData.append('amount', expense.amount.toString());
+    formData.append('projectName', expense.projectName);
+    formData.append('paidBy', expense.paidBy);
+    formData.append('fundedBy', expense.fundedBy);
+    formData.append('purchaseLocation', expense.purchaseLocation);
+    formData.append('paymentDate', expense.paymentDate.toISOString());
+    
+    if (image) {
+      formData.append('receipt', image, image.name);
+    }
 
     return from(
-      this.axios.post<Expense>('/expenses', expenseData)
-        .then(async (response) => {
-          if (image && response.data.id) {
-            await this.uploadImage(image, response.data.id).toPromise();
-          }
-          return response.data;
-        })
+      this.axios.post<Expense>('/expenses', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }).then(response => response.data)
     );
   }
 
   updateExpense(id: number, expense: Expense): Observable<Expense> {
     return from(
-      this.axios.put<Expense>(`/expenses/${id}`, expense)
-        .then(response => response.data)
+      this.axios.put<Expense>(`/expenses/${id}`, {
+        ...expense,
+        paymentDate: expense.paymentDate.toISOString() // Formatear fecha
+      }).then(response => response.data)
     );
   }
 
@@ -75,14 +92,10 @@ export class ExpenseService {
     );
   }
 
-  uploadImage(image: File, expenseId: number): Observable<void> {
-    const formData = new FormData();
-    formData.append('file', image);
-    formData.append('expenseId', expenseId.toString());
-
+  uploadImage(formData: FormData): Observable<void> {
     return from(
       this.axios.post<void>('/upload', formData, {
-        headers: {'Content-Type': 'multipart/form-data'}
+        headers: { 'Content-Type': 'multipart/form-data' }
       }).then(() => void 0)
     );
   }

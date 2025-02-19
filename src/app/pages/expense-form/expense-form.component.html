@@ -1,6 +1,5 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-3xl mx-auto px-4">
-        <!-- Card Container -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <!-- Header -->
             <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
@@ -8,21 +7,33 @@
                     {{ isEditing ? 'Editar' : 'Nuevo' }} Gasto
                 </h1>
                 <p class="text-blue-100 mt-1">
-                    {{ isEditing ? 'Actualiza los detalles del gasto existente' : 'Registra un nuevo gasto' }}
+                    {{ isEditing ? 'Actualiza los detalles del gasto' : 'Registra un nuevo gasto en el sistema' }}
                 </p>
             </div>
 
-            <!-- Loading State -->
             @if (loading) {
             <div class="flex justify-center items-center h-64">
                 <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
             </div>
             }
 
-            <!-- Form -->
             @if (!loading) {
             <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
-                <!-- Amount -->
+                <!-- Concepto -->
+                <div class="space-y-2">
+                    <label for="concept" class="block text-sm font-medium text-gray-700">
+                        Concepto <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="concept" formControlName="concept"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        placeholder="Ej. Compra de materiales de construcción"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('concept')}">
+                    @if (getErrorMessage('concept')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('concept') }}</p>
+                    }
+                </div>
+
+                <!-- Monto -->
                 <div class="space-y-2">
                     <label for="amount" class="block text-sm font-medium text-gray-700">
                         Monto <span class="text-red-500">*</span>
@@ -32,7 +43,7 @@
                             <span class="text-gray-500 sm:text-sm">$</span>
                         </div>
                         <input type="number" id="amount" formControlName="amount" step="0.01"
-                            class="block w-full pl-7 pr-12 py-3 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            class="block w-full pl-7 pr-12 py-3 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                             [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('amount')}"
                             placeholder="0.00">
                     </div>
@@ -41,72 +52,94 @@
                     }
                 </div>
 
-                <!-- Description -->
+                <!-- Proyecto -->
                 <div class="space-y-2">
-                    <label for="description" class="block text-sm font-medium text-gray-700">
-                        Descripción <span class="text-red-500">*</span>
+                    <label for="projectName" class="block text-sm font-medium text-gray-700">
+                      Proyecto <span class="text-red-500">*</span>
                     </label>
-                    <textarea id="description" formControlName="description" rows="3"
-                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('description')}"
-                        placeholder="Describe el gasto..."></textarea>
-                    @if (getErrorMessage('description')) {
-                    <p class="text-sm text-red-600">{{ getErrorMessage('description') }}</p>
+                    <input type="text" id="projectName" formControlName="projectName"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Ingrese el nombre del proyecto">
+                    @if (getErrorMessage('projectName')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('projectName') }}</p>
                     }
                 </div>
 
-                <!-- Category -->
+                <!-- Pagado por -->
                 <div class="space-y-2">
-                    <label for="category" class="block text-sm font-medium text-gray-700">
-                        Categoría <span class="text-red-500">*</span>
+                    <label for="paidBy" class="block text-sm font-medium text-gray-700">
+                        Pagado por <span class="text-red-500">*</span>
                     </label>
-                    <select id="category" formControlName="category"
-                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors">
-                        <option value="">Selecciona una categoría</option>
-                        @for (category of categories; track category.value) {
-                        <option [value]="category.value"
-                            [selected]="category.value === expenseForm.get('category')?.value">{{ category.label }}
-                        </option>
-                        }
-                    </select>
-                    @if (getErrorMessage('category')) {
-                    <p class="text-sm text-red-600">{{ getErrorMessage('category') }}</p>
+                    <input type="text" id="paidBy" formControlName="paidBy"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Ej. Daniel Pérez"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('paidBy')}">
+                    @if (getErrorMessage('paidBy')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('paidBy') }}</p>
                     }
                 </div>
 
-                <!-- Date -->
+                <!-- Financiado por -->
                 <div class="space-y-2">
-                    <label for="date" class="block text-sm font-medium text-gray-700">
-                        Fecha <span class="text-red-500">*</span>
+                    <label for="fundedBy" class="block text-sm font-medium text-gray-700">
+                        Financiado por <span class="text-red-500">*</span>
                     </label>
-                    <input type="date" id="date" formControlName="date"
-                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('date')}">
-                    @if (getErrorMessage('date')) {
-                    <p class="text-sm text-red-600">{{ getErrorMessage('date') }}</p>
+                    <input type="text" id="fundedBy" formControlName="fundedBy"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Ej. Paulina Gómez"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('fundedBy')}">
+                    @if (getErrorMessage('fundedBy')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('fundedBy') }}</p>
                     }
                 </div>
 
-                <!-- Image Upload -->
+                <!-- Lugar de compra -->
+                <div class="space-y-2">
+                    <label for="purchaseLocation" class="block text-sm font-medium text-gray-700">
+                        Lugar de compra <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="purchaseLocation" formControlName="purchaseLocation"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Ej. Home Depot, Av. Principal 123"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('purchaseLocation')}">
+                    @if (getErrorMessage('purchaseLocation')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('purchaseLocation') }}</p>
+                    }
+                </div>
+
+                <!-- Fecha de pago -->
+                <div class="space-y-2">
+                    <label for="paymentDate" class="block text-sm font-medium text-gray-700">
+                        Fecha de pago <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="paymentDate" formControlName="paymentDate"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': getErrorMessage('paymentDate')}">
+                    @if (getErrorMessage('paymentDate')) {
+                    <p class="text-sm text-red-600">{{ getErrorMessage('paymentDate') }}</p>
+                    }
+                </div>
+
+                <!-- Imagen -->
                 <div class="space-y-2">
                     <label for="image" class="block text-sm font-medium text-gray-700">
-                        Cargar Imagen
+                        Comprobante (Imagen)
                     </label>
                     <input type="file" id="image" (change)="onImageSelected($event)"
-                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        accept="image/*" />
-                    <p class="text-sm text-gray-500">Opcional: Carga una imagen relacionada con el gasto.</p>
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        accept="image/*">
+                    <p class="text-sm text-gray-500">Formatos aceptados: JPG, PNG (Máx. 5MB)</p>
                 </div>
 
-                <!-- Buttons -->
+                <!-- Botones -->
                 <div class="flex justify-end space-x-3 pt-6">
                     <button type="button" routerLink="/expenses"
-                        class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500">
                         Cancelar
                     </button>
                     <button type="submit" [disabled]="loading"
-                        class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        {{ isEditing ? 'Actualizar' : 'Crear' }} Gasto
+                        class="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
+                        {{ isEditing ? 'Actualizar' : 'Registrar' }} Gasto
                     </button>
                 </div>
             </form>
